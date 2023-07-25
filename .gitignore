@@ -1,0 +1,7 @@
+researchTranslator/
+upload/
+data/
+__pycache__/
+.DS_Store
+
+custom_library.py
