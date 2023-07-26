@@ -7,6 +7,7 @@ from PDFparser import PdfParser
 from Translator import googleTranslator
 
 app = Flask(__name__)
+app.jinja_env.filters['zip'] = zip
 
 upload_path = './upload/'
 data_path = './data/'
@@ -33,6 +34,9 @@ def upload():
         parser = PdfParser(file)
         parser.parse()
 
+        # parser = PdfParser(file)
+        # parser.parseWithLayout()
+
         # Crate a module to translate the text
         trans = googleTranslator('zh-tw')
         trans.translate()
@@ -43,12 +47,12 @@ def upload():
 @app.route('/result')
 def result():
     with open(os.path.join(data_path, 'translated_text.json'), 'r', encoding='utf-8') as file:
-        json_data = json.load(file)
-    return render_template('result.html',text=json_data)
+        json_data_translated = json.load(file)
 
-@app.route('/download')
-def download():
-    return 'Download!' 
+    with open(os.path.join(data_path, 'parsed_text.json'), 'r', encoding='utf-8') as file:
+        json_data_parsed = json.load(file)
+    return render_template('result.html',text=json_data_translated, origin=json_data_parsed)
+
 
 @app.route('/testTranslate')
 def test():
