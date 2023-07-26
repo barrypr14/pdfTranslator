@@ -1,7 +1,13 @@
-researchTranslator/
+# ignore virtual environment directories
+myenv/
+
+# ignore those temporary file directory
 upload/
 data/
+
+# ignore cache directories
 __pycache__/
 .DS_Store
 
+# ignore my own test file
 custom_library.py
