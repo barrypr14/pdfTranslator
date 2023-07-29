@@ -1,10 +1,11 @@
 import os
 import json
-from flask import Flask, request, redirect, session, url_for, render_template
+from flask import Flask, request, redirect, session, url_for, render_template, jsonify
 import custom_library
 
 from PDFparser import PdfParser
 from Translator import googleTranslator
+import fileManager
 
 app = Flask(__name__)
 app.jinja_env.filters['zip'] = zip
@@ -42,17 +43,29 @@ def upload():
         trans.translate()
 
         return redirect(url_for('result'))
-
-    
+   
 @app.route('/result')
 def result():
-    with open(os.path.join(data_path, 'translated_text.json'), 'r', encoding='utf-8') as file:
-        json_data_translated = json.load(file)
-
-    with open(os.path.join(data_path, 'parsed_text.json'), 'r', encoding='utf-8') as file:
-        json_data_parsed = json.load(file)
+    json_data_translated = fileManager.readTheFile(os.path.join(data_path, 'translated_text.json'))
+    json_data_parsed = fileManager.readTheFile(os.path.join(data_path, 'parsed_text.json'))
     return render_template('result.html',text=json_data_translated, origin=json_data_parsed)
 
+@app.route('/delete', methods=['POST'])
+def delete() :
+    index = int(request.form['index'])
+    
+    translated_text = fileManager.readTheFile(os.path.join(data_path, 'translated_text.json'))
+    parsed_text = fileManager.readTheFile(os.path.join(data_path, 'parsed_text.json'))
+
+    if 0 <= index < len(translated_text) :
+        translated_text.pop(index)
+        parsed_text.pop(index)
+
+        # Save the modified lists back to JSON files
+        fileManager.storeTheFile(os.path.join(data_path, 'translated_text.json'),translated_text)
+        fileManager.storeTheFile(os.path.join(data_path, 'parsed_text.json'),parsed_text)
+
+        return jsonify(success=True)
 
 @app.route('/testTranslate')
 def test():

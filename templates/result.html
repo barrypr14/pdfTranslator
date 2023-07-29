@@ -4,21 +4,55 @@
 <head>
     <title>Parsed Text Result</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-wEmeIV1mKuiNpC+IOBjI7aAzPcEZeedi5yW5f2yOq55WWLwNGmvvx4Um1vskeMj0" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
     <div class="container">
         <h1>Parsed Text</h1>
-        <div class="container">
+        <div class="container result-list">
             {% for translated_text, origin_text in text|zip(origin)%}
-            <div class="container m-2 border border-dark rounded">
-                <p class="fw-bold">Origin Text :</p>
-                <p>{{origin_text}} </p>
-                <p class="fw-bold">Translated Text : </p>
-                <p>{{translated_text}}</p> 
+            <div class="container m-2 border border-dark rounded d-flex result">
+                <div class="container">
+                    <p class="fw-bold">Origin Text :</p>
+                    <p>{{origin_text}} </p>
+                    <p class="fw-bold">Translated Text : </p>
+                    <p>{{translated_text}}</p>                     
+                </div>
+                <div>
+                    <button class="btn btn-primary delete-btn" data-index="{{ loop.index0 }}">delete</button>
+                </div>
             </div>
             {% endfor %}
         </div>        
     </div>
 
+    <script>
+        $(document).ready(function() {
+            // Handle click event on delete buttons
+            $('.delete-btn').click(function() {
+                var index = $(this).data('index');
+                // Send Ajax request to delete_result route
+                $.ajax({
+                    url: '/delete',
+                    type: 'POST',
+                    data: {index: index},
+                    success: function(response) {
+                        if (response.success) {
+                            // If deletion was successful, remove the item from the list on the client side
+                            $('.result').eq(index).remove();
+                        } else {
+                            // Handle error if the item cannot be deleted
+                            alert('Failed to delete the item.');
+                        }
+                    },
+                    error: function() {
+                        // Handle error if the Ajax request fails
+                        alert('Failed to delete the item.');
+                    }
+                });
+            });
+        });
+    </script>
+    </script>
 </body>
 </html>

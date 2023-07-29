@@ -1,6 +1,5 @@
 from io import StringIO
-import os
-import json 
+import os, json
 
 from pdfminer.converter import TextConverter, PDFPageAggregator
 from pdfminer.layout import LAParams, LTTextBox, LTImage, LTText, LTTextLine,LTRect
@@ -9,7 +8,7 @@ from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFParser
 
-
+import fileManager
 class PdfParser :
     def __init__(self, file) :
         self.file = file
@@ -31,8 +30,7 @@ class PdfParser :
                 interpreter.process_page(page)
             device.close()
 
-        with open(os.path.join(self.data_path, 'parsed_text_before.json'), 'w', encoding='utf-8') as file:
-            json.dump(output_string.getvalue(),file)
+        fileManager.storeTheFile(os.path.join(self.data_path, 'parsed_text_before.json'),output_string.getvalue())
         # split into paragraph
         split_to_paragraph = output_string.getvalue().split("\n\n")
 
@@ -41,8 +39,7 @@ class PdfParser :
         for paragraph in split_to_paragraph :
             remove_newline.append(paragraph.replace("\n"," "))
 
-        with open(os.path.join(self.data_path, 'parsed_text.json'), 'w', encoding='utf-8') as file:
-            json.dump(remove_newline,file)
+        fileManager.storeTheFile(os.path.join(self.data_path, 'parsed_text.json'),remove_newline)
         print("finish parse function")
 
     def prepare(self) :
