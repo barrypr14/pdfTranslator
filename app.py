@@ -52,20 +52,25 @@ def result():
 
 @app.route('/delete', methods=['POST'])
 def delete() :
-    index = int(request.form['index'])
-    
+    indices = request.form.getlist('indices[]')
+    indices = [int(index) for index in indices]
+
     translated_text = fileManager.readTheFile(os.path.join(data_path, 'translated_text.json'))
     parsed_text = fileManager.readTheFile(os.path.join(data_path, 'parsed_text.json'))
-
-    if 0 <= index < len(translated_text) :
-        translated_text.pop(index)
-        parsed_text.pop(index)
+    
+    try:
+        for index in indices :
+            if 0 <= index < len(translated_text) :
+                translated_text.pop(str(index))
+                parsed_text.pop(str(index))
 
         # Save the modified lists back to JSON files
         fileManager.storeTheFile(os.path.join(data_path, 'translated_text.json'),translated_text)
         fileManager.storeTheFile(os.path.join(data_path, 'parsed_text.json'),parsed_text)
 
         return jsonify(success=True)
+    except:
+        return jsonify(success=False, error='Invalid index')
 
 @app.route('/testTranslate')
 def test():

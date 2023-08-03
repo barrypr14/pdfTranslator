@@ -39,7 +39,9 @@ class PdfParser :
         for paragraph in split_to_paragraph :
             remove_newline.append(paragraph.replace("\n"," "))
 
-        fileManager.storeTheFile(os.path.join(self.data_path, 'parsed_text.json'),remove_newline)
+        parsed_data = {index: item for index,item in enumerate(remove_newline)} 
+        print("the type of parsed data in parser module => ",type(parsed_data))
+        fileManager.storeTheFile(os.path.join(self.data_path, 'parsed_text.json'),parsed_data)
         print("finish parse function")
 
     def prepare(self) :

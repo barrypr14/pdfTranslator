@@ -8,4 +8,3 @@ def readTheFile(filePath) :
     with open(filePath, 'r', encoding='utf-8') as file:
         read_text = json.load(file)
     return read_text
-        

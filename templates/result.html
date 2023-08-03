@@ -9,17 +9,26 @@
 <body>
     <div class="container">
         <h1>Parsed Text</h1>
+        <div class="container">
+            <button class="btn btn-danger delete-selected-btn">Delete Selected</button>
+            <button class="btn btn-danger delete-all-btn" style="display: none;">Delete All</button>
+            <button class="btn btn-primary delete-cancelled-btn" style="display: none;">Cancel</button>
+        </div>
+
         <div class="container result-list">
-            {% for translated_text, origin_text in text|zip(origin)%}
-            <div class="container m-2 border border-dark rounded d-flex result">
+            {% for translated_text, origin_text in text.items()|zip(origin.items())%}
+            <div class="container m-2 border border-dark rounded d-flex result" data-index="{{origin_text[0]}}">
                 <div class="container">
                     <p class="fw-bold">Origin Text :</p>
-                    <p>{{origin_text}} </p>
+                    <p>{{origin_text[1]}} </p>
                     <p class="fw-bold">Translated Text : </p>
-                    <p>{{translated_text}}</p>                     
+                    <p>{{translated_text[1]}}</p>                     
                 </div>
                 <div>
-                    <button class="btn btn-primary delete-btn" data-index="{{ loop.index0 }}">delete</button>
+                    <button class="btn btn-primary delete-btn" data-index="{{ origin_text[0] }}">delete</button>
+                </div>
+                <div>
+                    <input type="checkbox" class="item-checkbox" data-index="{{origin_text[0]}}" style="display: none;">
                 </div>
             </div>
             {% endfor %}
@@ -28,29 +37,86 @@
 
     <script>
         $(document).ready(function() {
+
             // Handle click event on delete buttons
             $('.delete-btn').click(function() {
-                var index = $(this).data('index');
-                // Send Ajax request to delete_result route
+                var index = [$(this).data('index')];
+                console.log("in delete-btn selector",index);
+                // show a comfirmation dialog box
+                if(!comfirmed()){
+                    return;
+                }
+
+                // Send Ajax request to delete route
+                deleteItems(index);
+            });
+            
+            $('.delete-selected-btn').click(function() {
+                $('.item-checkbox').show();
+                $('.delete-all-btn').show();
+                $('.delete-cancelled-btn').show();
+                $(this).hide();
+            });
+
+            $('.delete-cancelled-btn').click(function () {
+                $(this).hide();
+                $('.delete-all-btn').hide();
+                $('.delete-selected-btn').show();
+                $('.item-checkbox').hide();
+            })
+
+            $('.delete-all-btn').click(async function() {
+                var allIndices = [];
+                $('.item-checkbox').each(async function () {
+                    if($(this).is(':checked')){
+                        var index = $(this).data('index');
+                        allIndices.push(index);
+                    }
+                });
+                console.log(allIndices);
+                if(allIndices.length === 0){
+                    alert('No items to delete');
+                    return;
+                }
+                // show a comfirmation dialog box  
+                if(!comfirmed()){
+                    return;
+                }
+                
+                // Send Ajax request to delete route
+                deleteItems(allIndices);
+            })
+            
+            function deleteItems (allIndices) {
                 $.ajax({
                     url: '/delete',
                     type: 'POST',
-                    data: {index: index},
+                    data: {indices : allIndices},
                     success: function(response) {
                         if (response.success) {
-                            // If deletion was successful, remove the item from the list on the client side
-                            $('.result').eq(index).remove();
+                            // If deletion was successful, remove all items from the list on the client side
+                            allIndices.forEach(index => {
+                                $('.result[data-index="'+index+'"]').remove();
+                            });
                         } else {
-                            // Handle error if the item cannot be deleted
-                            alert('Failed to delete the item.');
+                            // Handle error if the items cannot be deleted
+                            alert('Failed to delete all items.');
                         }
                     },
                     error: function() {
                         // Handle error if the Ajax request fails
-                        alert('Failed to delete the item.');
+                        alert('Failed to delete all items.');
                     }
-                });
-            });
+                });  
+            }
+            function comfirmed (){
+                // Show a confirmation dialog box
+                var confirmed = confirm('Are you sure you want to delete all items?');
+                if (!confirmed) {
+                    return false; // If the user clicks "Cancel", do nothing
+                }
+                return true;
+            }
         });
     </script>
     </script>
