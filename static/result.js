@@ -1,6 +1,8 @@
 $(document).ready(function() {
     selected_index = []
-    // Handle click event on delete buttons
+    // Delete Mode
+
+    // single delete
     $('.delete-btn').click(function() {
         selected_index.push($(this).data('index'));
         console.log("in delete-btn selector",selected_index);
@@ -32,7 +34,7 @@ $(document).ready(function() {
         $('.item-checkbox').hide();
         $('.item-checkbox').prop("checked",false);
     })
-
+    // multiple delete
     $('.delete-all-btn').click(function() {
         $('.item-checkbox').each(function () {
             if($(this).is(':checked')){
@@ -46,7 +48,7 @@ $(document).ready(function() {
             return;
         }
         // show a comfirmation dialog box  
-        if(!comfirmed()){
+        if(!comfirmed('Are you sure you want to delete all items?')){
             return;
         }
         
@@ -78,7 +80,7 @@ $(document).ready(function() {
         selected_index.length = 0;
         $('.delete-cancelled-btn').trigger("click");
     }            
-    // Handle merge event to translate the paragraph again
+    // Merge Mode
     $('.translate-again-btn').click(function () {
         var merged_text = "";
         $('.merged-checkbox').each(function () {
@@ -153,12 +155,37 @@ $(document).ready(function() {
         selected_index.length = 0;
         $('.merged-cancelled-btn').trigger("click");
     }
-    function comfirmed (){
+
+    // Common function in Delete Mode and Merge Mode
+    function comfirmed (text){
         // Show a confirmation dialog box
-        var confirmed = confirm('Are you sure you want to delete all items?');
+        var confirmed = confirm(text);
         if (!confirmed) {
             return false; // If the user clicks "Cancel", do nothing
         }
         return true;
     }
+
+    // Download the file
+    $('.download-btn').click(function () {
+        if(!confirm('Do you sure want to download the file?')){
+            return;
+        }
+
+        $.ajax({
+            url: '/download',
+            type: 'GET',
+            success: function(response) {
+                if(response.success){
+                    alert("Success to download");
+                }
+                else{
+                    alert("Failed to download")
+                }
+            },
+            error: function(){
+                alert("Failed to download")
+            }
+        })
+    })
 });

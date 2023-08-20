@@ -55,31 +55,3 @@ class PdfParser :
         with open(os.path.join(self.data_path, 'parsed_text.json'), 'r', encoding='utf-8') as file:
             json_data = json.load(file)
 
-    def parseWithLayout(self) :
-        output_string = StringIO()
-
-        with open(self.pdf_path, 'rb') as in_file:
-            parser = PDFParser(in_file)
-            doc = PDFDocument(parser)
-            rsrcmgr = PDFResourceManager()
-            device = PDFPageAggregator(rsrcmgr, laparams=LAParams(char_margin=10))
-            interpreter = PDFPageInterpreter(rsrcmgr, device)
-
-            text_list = []
-
-            for page in PDFPage.get_pages(in_file, check_extractable=True) :
-                interpreter.process_page(page)
-
-                layout = device.get_result()
-
-                for element in layout :
-                    if isinstance(element,LTTextBox) :
-                        # Check if the LTTextBox is part of a table
-                        is_table = any(isinstance(e, LTRect) for e in element._objs)
-                        if not is_table :
-                            text_list.append(element.get_text())
-                            print(element._objs)
-
-            device.close()
-            print(len(text_list))
-

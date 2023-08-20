@@ -4,6 +4,7 @@ myenv/
 # ignore those temporary file directory
 upload/
 data/
+download/
 
 # ignore cache directories
 __pycache__/

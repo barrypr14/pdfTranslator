@@ -1,11 +1,10 @@
 import os
-import json
-from flask import Flask, request, redirect, session, url_for, render_template, jsonify
-import custom_library
+from flask import Flask, request, redirect, url_for, render_template, jsonify
 
 from PDFparser import PdfParser
 from Translator import googleTranslator
 import fileManager
+from docx import Document
 
 app = Flask(__name__)
 app.jinja_env.filters['zip'] = zip
@@ -103,7 +102,27 @@ def translate():
 
         return jsonify(success=True, text=translated_merged_text)
     except :
-        return jsonify(success=False, erro='Invalid merged')
+        return jsonify(success=False, error='Invalid merged')
+
+@app.route('/download', methods=['GET'])
+def download():
+    translated_text = fileManager.readTheFile(os.path.join(data_path, 'translated_text.json'))
+    parsed_text = fileManager.readTheFile(os.path.join(data_path, 'parsed_text.json'))
+
+    try:
+        doc = Document()
+        doc.add_heading("The Translated text from PDFTranslator", level=1)
+        for index, (trans_key, trans_value) in enumerate(translated_text.items()):
+            parse_value = parsed_text.get(trans_key,"").replace('\f',' ')
+            trans_value = trans_value.replace('\f',' ')
+
+            doc.add_paragraph(parse_value, style='Normal')
+            doc.add_paragraph(trans_value, style='Normal')
+        
+        doc.save('./download/output.docx')
+        return jsonify(success=True)
+    except:
+        return jsonify(success=False)
 
 if __name__ == '__main__':
     app.run(host='localhost',port=4000,debug=True)
