@@ -35,9 +35,6 @@ def upload():
         parser = PdfParser(file)
         parser.parse()
 
-        # parser = PdfParser(file)
-        # parser.parseWithLayout()
-
         # Crate a module to translate the text
         trans = googleTranslator('zh-tw')
         trans.translate()
@@ -52,12 +49,14 @@ def result():
 
 @app.route('/delete', methods=['POST'])
 def delete() :
+    print("Let start removing the useless text")
     indices = request.form.getlist('indices[]')
     indices = [int(index) for index in indices]
-
+    # Get the origin data 
     translated_text = fileManager.readTheFile(os.path.join(data_path, 'translated_text.json'))
     parsed_text = fileManager.readTheFile(os.path.join(data_path, 'parsed_text.json'))
     
+    # Start to remove the index that is useless for user
     try:
         for index in indices :
             if 0 <= index < len(translated_text) :
@@ -74,25 +73,28 @@ def delete() :
 
 @app.route('/translate', methods=['POST'])
 def translate():
-    print("start to translate a new merged text")
+    print("Let start to translate a new merged text")
     text = request.form['text']
     indices = request.form.getlist('indices[]')
     indices = [int(index) for index in indices]
 
+    # Get the origin data 
     translated_text = fileManager.readTheFile(os.path.join(data_path, 'translated_text.json'))
     parsed_text = fileManager.readTheFile(os.path.join(data_path, 'parsed_text.json'))
+
+    # Start to delete the content in the origin dictionary and put the new translated text in the corresponding index
     try :
         translator = googleTranslator('zh-tw',text=text)
         translated_merged_text = translator.translate_merged()
-        print("the type of the translated_text from the fileManager is {}".format(type(translated_text)))
+        
         for index in indices :
             if 0 <= index < len(translated_text) and index != indices[0] :
                 del translated_text[str(index)]
                 del parsed_text[str(index)]
                 print("delete the {} in the parsed_text.json".format(index))
         
-        translated_text[indices[0]] = translated_merged_text
-        parsed_text[indices[0]] = text
+        translated_text[str(indices[0])] = translated_merged_text
+        parsed_text[str(indices[0])] = text
 
         # Save the modified lists back to JSON files
         fileManager.storeTheFile(os.path.join(data_path, 'translated_text.json'),translated_text)
