@@ -72,11 +72,35 @@ def delete() :
     except:
         return jsonify(success=False, error='Invalid index')
 
-@app.route('/testTranslate')
-def test():
-    text = ['I am handsome','Can you help me','I like sex']
-    translated_text = custom_library.translate_text(text,'zh-tw')
-    return render_template('result.html',text=translated_text)
+@app.route('/translate', methods=['POST'])
+def translate():
+    print("start to translate a new merged text")
+    text = request.form['text']
+    indices = request.form.getlist('indices[]')
+    indices = [int(index) for index in indices]
+
+    translated_text = fileManager.readTheFile(os.path.join(data_path, 'translated_text.json'))
+    parsed_text = fileManager.readTheFile(os.path.join(data_path, 'parsed_text.json'))
+    try :
+        translator = googleTranslator('zh-tw',text=text)
+        translated_merged_text = translator.translate_merged()
+        print("the type of the translated_text from the fileManager is {}".format(type(translated_text)))
+        for index in indices :
+            if 0 <= index < len(translated_text) and index != indices[0] :
+                del translated_text[str(index)]
+                del parsed_text[str(index)]
+                print("delete the {} in the parsed_text.json".format(index))
+        
+        translated_text[indices[0]] = translated_merged_text
+        parsed_text[indices[0]] = text
+
+        # Save the modified lists back to JSON files
+        fileManager.storeTheFile(os.path.join(data_path, 'translated_text.json'),translated_text)
+        fileManager.storeTheFile(os.path.join(data_path, 'parsed_text.json'),parsed_text)        
+
+        return jsonify(success=True, text=translated_merged_text)
+    except :
+        return jsonify(success=False, erro='Invalid merged')
 
 if __name__ == '__main__':
     app.run(host='localhost',port=4000,debug=True)

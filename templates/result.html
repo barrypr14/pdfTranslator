@@ -9,10 +9,14 @@
 <body>
     <div class="container">
         <h1>Parsed Text</h1>
-        <div class="container">
+        <div class="container" style="position: fixed">
             <button class="btn btn-danger delete-selected-btn">Delete Selected</button>
             <button class="btn btn-danger delete-all-btn" style="display: none;">Delete All</button>
             <button class="btn btn-primary delete-cancelled-btn" style="display: none;">Cancel</button>
+
+            <button class="btn btn-info merged-selected-btn">Merge Selected</button>
+            <button class="btn btn-info translate-again-btn" style="display: none;">Translate Again</button>
+            <button class="btn btn-primary merged-cancelled-btn" style="display: none;">Cancel</button>
         </div>
 
         <div class="container result-list">
@@ -20,9 +24,9 @@
             <div class="container m-2 border border-dark rounded d-flex result" data-index="{{origin_text[0]}}">
                 <div class="container">
                     <p class="fw-bold">Origin Text :</p>
-                    <p>{{origin_text[1]}} </p>
+                    <textarea rows="5" class="origin_text" data-index="{{origin_text[0]}}" style="width: 100%;">{{origin_text[1]}} </textarea>
                     <p class="fw-bold">Translated Text : </p>
-                    <p>{{translated_text[1]}}</p>                     
+                    <p class="translated_text" data-index="{{origin_text[0]}}">{{translated_text[1]}}</p>                     
                 </div>
                 <div>
                     <button class="btn btn-primary delete-btn" data-index="{{ origin_text[0] }}">delete</button>
@@ -30,9 +34,12 @@
                 <div>
                     <input type="checkbox" class="item-checkbox" data-index="{{origin_text[0]}}" style="display: none;">
                 </div>
+                <div>
+                    <input type="checkbox" class="merged-checkbox" data-index="{{origin_text[0]}}" style="display: none;">
+                </div>
             </div>
             {% endfor %}
-        </div>        
+        </div>             
     </div>
 
     <script>
@@ -86,7 +93,43 @@
                 // Send Ajax request to delete route
                 deleteItems(allIndices);
             })
+            // Handle merge event to translate the paragraph again
+            $('.translate-again-btn').click(function () {
+                var merged_text = "";
+                var merged_index = []
+                $('.merged-checkbox').each(function () {
+                    if($(this).is(':checked')){
+                        var index = $(this).data('index');
+                        merged_index.push(index);
+                        merged_text += $('.origin_text[data-index="'+index+'"]').text()
+                    }
+                })
+                console.log(merged_text);
+
+                if(merged_index.length === 0){
+                    alert('No items to merge')
+                    return;
+                }
+
+                if(!confirm()){
+                    return;
+                }
+
+                translate(merged_text, merged_index)
+            })
             
+            $('.merged-cancelled-btn').click(function() {
+                $('.translate-again-btn').hide();
+                $('.merged-selected-btn').show();
+                $('.merged-checkbox').hide();
+                $(this).hide();
+            })
+            $('.merged-selected-btn').click(function() {
+                $(this).hide();
+                $('.translate-again-btn').show();
+                $('.merged-checkbox').show();
+                $('.merged-cancelled-btn').show();
+            })
             function deleteItems (allIndices) {
                 $.ajax({
                     url: '/delete',
@@ -116,6 +159,36 @@
                     return false; // If the user clicks "Cancel", do nothing
                 }
                 return true;
+            }
+            
+            function translate (text, text_index){
+                text_index.sort();
+                console.log("Lets start to merge the text in ",text_index)
+                $.ajax({
+                    url: '/translate',
+                    type: 'POST',
+                    data: {text: text,
+                           indices: text_index},
+                    success: function(response) {
+                        if(response.success) {
+                            text_index.forEach(index => {
+                                if (index !== text_index[0]){
+                                    $('.result[data-index="'+index+'"]').remove();
+                                }
+                                else{
+                                    $('.origin_text[data-index="'+index+'"]').text(text);
+                                    $('.translated_text[data-index="'+index+'"]').text(response.text);
+                                }
+                            })
+                        }
+                        else{
+                            alert('Failed to translate the new text');
+                        }
+                    },
+                    error: function(){
+                        alert('Failed to translate the new text');
+                    }
+                });
             }
         });
     </script>
