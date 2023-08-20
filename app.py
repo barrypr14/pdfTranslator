@@ -52,6 +52,7 @@ def delete() :
     print("Let start removing the useless text")
     indices = request.form.getlist('indices[]')
     indices = [int(index) for index in indices]
+
     # Get the origin data 
     translated_text = fileManager.readTheFile(os.path.join(data_path, 'translated_text.json'))
     parsed_text = fileManager.readTheFile(os.path.join(data_path, 'parsed_text.json'))
@@ -59,7 +60,7 @@ def delete() :
     # Start to remove the index that is useless for user
     try:
         for index in indices :
-            if 0 <= index < len(translated_text) :
+            if 0 <= index < int(max(translated_text.keys())):
                 translated_text.pop(str(index))
                 parsed_text.pop(str(index))
 

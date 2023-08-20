@@ -1,19 +1,24 @@
 $(document).ready(function() {
-
+    selected_index = []
     // Handle click event on delete buttons
     $('.delete-btn').click(function() {
-        var index = [$(this).data('index')];
-        console.log("in delete-btn selector",index);
+        selected_index.push($(this).data('index'));
+        console.log("in delete-btn selector",selected_index);
         // show a comfirmation dialog box
         if(!comfirmed()){
             return;
         }
 
         // Send Ajax request to delete route
-        deleteItems(index);
+        deleteItems(selected_index);
     });
     
     $('.delete-selected-btn').click(function() {
+        if($('.translate-again-btn').is(":visible")){
+            alert("Your are in Merge mode, so you can't use the Delete mode");
+            return;
+        }
+
         $('.item-checkbox').show();
         $('.delete-all-btn').show();
         $('.delete-cancelled-btn').show();
@@ -25,18 +30,18 @@ $(document).ready(function() {
         $('.delete-all-btn').hide();
         $('.delete-selected-btn').show();
         $('.item-checkbox').hide();
+        $('.item-checkbox').prop("checked",false);
     })
 
-    $('.delete-all-btn').click(async function() {
-        var allIndices = [];
-        $('.item-checkbox').each(async function () {
+    $('.delete-all-btn').click(function() {
+        $('.item-checkbox').each(function () {
             if($(this).is(':checked')){
                 var index = $(this).data('index');
-                allIndices.push(index);
+                selected_index.push(index);
             }
         });
-        console.log(allIndices);
-        if(allIndices.length === 0){
+        console.log(selected_index);
+        if(selected_index.length === 0){
             alert('No items to delete');
             return;
         }
@@ -46,10 +51,10 @@ $(document).ready(function() {
         }
         
         // Send Ajax request to delete route
-        deleteItems(allIndices);
+        deleteItems(selected_index);
     })
-    function deleteItems (allIndices) {
-        $.ajax({
+    async function deleteItems (allIndices) {
+        await $.ajax({
             url: '/delete',
             type: 'POST',
             data: {indices : allIndices},
@@ -68,21 +73,23 @@ $(document).ready(function() {
                 // Handle error if the Ajax request fails
                 alert('Failed to delete all items.');
             }
-        });  
+        }); 
+        
+        selected_index.length = 0;
+        $('.delete-cancelled-btn').trigger("click");
     }            
     // Handle merge event to translate the paragraph again
     $('.translate-again-btn').click(function () {
         var merged_text = "";
-        var merged_index = []
         $('.merged-checkbox').each(function () {
             if($(this).is(':checked')){
                 var index = $(this).data('index');
-                merged_index.push(index);
+                selected_index.push(index);
                 merged_text += $('.origin_text[data-index="'+index+'"]').text()
             }
         })
 
-        if(merged_index.length === 0){
+        if(selected_index.length === 0){
             alert('No items to merge')
             return;
         }
@@ -91,7 +98,7 @@ $(document).ready(function() {
             return;
         }
 
-        translate(merged_text, merged_index)
+        translate(merged_text, selected_index)
     })
     
     $('.merged-cancelled-btn').click(function() {
@@ -99,24 +106,32 @@ $(document).ready(function() {
         $('.merged-selected-btn').show();
         $('.merged-checkbox').hide();
         $(this).hide();
+
+        $('.merged-checkbox').prop('checked',false);
+        selected_index.length = 0;
     })
     $('.merged-selected-btn').click(function() {
+        if($('.delete-all-btn').is(":visible")){
+            alert("You are in Delete Mode, so you can't use Merge mode");
+            return;
+        }
         $(this).hide();
         $('.translate-again-btn').show();
         $('.merged-checkbox').show();
         $('.merged-cancelled-btn').show();
     })
     
-    function translate (text, text_index){
+    async function translate (text, text_index){
         text_index.sort();
         console.log("Lets start to merge the text in ",text_index)
-        $.ajax({
+        await $.ajax({
             url: '/translate',
             type: 'POST',
             data: {text: text,
                    indices: text_index},
             success: function(response) {
                 if(response.success) {
+                    console.log(text_index);
                     text_index.forEach(index => {
                         if (index !== text_index[0]){
                             $('.result[data-index="'+index+'"]').remove();
@@ -135,6 +150,8 @@ $(document).ready(function() {
                 alert('Failed to translate the new text');
             }
         });
+        selected_index.length = 0;
+        $('.merged-cancelled-btn').trigger("click");
     }
     function comfirmed (){
         // Show a confirmation dialog box
