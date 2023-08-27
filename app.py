@@ -54,7 +54,7 @@ def result():
 def delete() :
     print("Let start removing the useless text")
     indices = request.form.getlist('indices[]')
-    indices = [tuple(int(num) for num in index.replace('(','').replace(')','').split(',') )for index in indices]
+    indices = [tuple(int(num) for num in index.split('-') )for index in indices]
     
     # Get the origin data 
     translated_text = fileManager.readTheFile(os.path.join(data_path, 'translated_text.json'))
@@ -77,8 +77,9 @@ def translate():
     print("Let start to translate a new merged text")
     text = request.form['text']
     indices = request.form.getlist('indices[]')
-    indices = [int(index) for index in indices]
+    indices = [tuple(int(num) for num in index.split('-') )for index in indices]
 
+    indices = sorted(indices, key=lambda x : (x[0],x[1]))
     # Get the origin data 
     translated_text = fileManager.readTheFile(os.path.join(data_path, 'translated_text.json'))
     parsed_text = fileManager.readTheFile(os.path.join(data_path, 'parsed_text.json'))
@@ -88,20 +89,40 @@ def translate():
         translator = googleTranslator('zh-tw',text=text)
         translated_merged_text = translator.translate_merged()
         
-        for index in indices :
-            if 0 <= index < len(translated_text) and index != indices[0] :
-                del translated_text[str(index)]
-                del parsed_text[str(index)]
-                print("delete the {} in the parsed_text.json".format(index))
+        # get the first element position
+        for element in translated_text :
+            if element['page_index'] == indices[0][0] and element['element_index'] == indices[0][1] :
+                position = element['position']
         
-        translated_text[str(indices[0])] = translated_merged_text
-        parsed_text[str(indices[0])] = text
+        translated_data = {
+            "page_index" : indices[0][0],
+            "element_index" : indices[0][1],
+            "text" : translated_merged_text,
+            "position" : position
+        }
+        parsed_data = {
+            "page_index" : indices[0][0],
+            "element_index" : indices[0][1],
+            "text" : text,
+            "position" : position
+        }
+    
+        # delete the origin selected data
+        parsed_text = [obj for obj in parsed_text if (obj['page_index'],obj['element_index']) not in indices]
+        translated_text = [obj for obj in translated_text if  (obj['page_index'],obj['element_index']) not in indices]
+        # put the new data in the file
+        translated_text.append(translated_data)
+        parsed_text.append(parsed_data)
+
+        # sort the file again to the correct order
+        translated_text = sorted(translated_text, key=lambda x: (x['page_index'], x['position'][0], -x['position'][3]))
+        parsed_text = sorted(parsed_text, key=lambda x: (x['page_index'], x['position'][0], -x['position'][3]))
 
         # Save the modified lists back to JSON files
         fileManager.storeTheFile(os.path.join(data_path, 'translated_text.json'),translated_text)
         fileManager.storeTheFile(os.path.join(data_path, 'parsed_text.json'),parsed_text)        
 
-        return jsonify(success=True, text=translated_merged_text)
+        return jsonify(success=True, text=translated_merged_text, indices = indices)
     except :
         return jsonify(success=False, error='Invalid merged')
 

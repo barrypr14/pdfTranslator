@@ -127,7 +127,6 @@ $(document).ready(function() {
     })
     
     async function translate (text, text_index){
-        text_index.sort();
         console.log("Lets start to merge the text in ",text_index)
         await $.ajax({
             url: '/translate',
@@ -136,14 +135,18 @@ $(document).ready(function() {
                    indices: text_index},
             success: function(response) {
                 if(response.success) {
-                    console.log(text_index);
+                    text_index = response.indices;
+            
                     text_index.forEach(index => {
+                        console.log(index);
+                        tmp_index = index.join('-');
+                        console.log(tmp_index)
                         if (index !== text_index[0]){
-                            $('.result[data-index="'+index+'"]').remove();
+                            $('.result[data-index="'+tmp_index+'"]').remove();
                         }
                         else{
-                            $('.origin_text[data-index="'+index+'"]').text(text);
-                            $('.translated_text[data-index="'+index+'"]').text(response.text);
+                            $('.origin_text[data-index="'+tmp_index+'"]').text(text);
+                            $('.translated_text[data-index="'+tmp_index+'"]').text(response.text);
                         }
                     })
                 }
