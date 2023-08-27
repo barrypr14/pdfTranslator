@@ -174,7 +174,7 @@ $(document).ready(function() {
 
     // Download the file
     $('.download-btn').click(function () {
-        if(!confirm('Do you sure want to download the file?')){
+        if(!confirm('Do you want to download the file?')){
             return;
         }
 
@@ -189,8 +189,8 @@ $(document).ready(function() {
                     alert("Failed to download")
                 }
             },
-            error: function(){
-                alert("Failed to download")
+            error: function(response){
+                alert(response.error)
             }
         })
     })

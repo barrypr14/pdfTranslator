@@ -134,17 +134,19 @@ def download():
     try:
         doc = Document()
         doc.add_heading("The Translated text from PDFTranslator", level=1)
-        for index, (trans_key, trans_value) in enumerate(translated_text.items()):
-            parse_value = parsed_text.get(trans_key,"").replace('\f',' ')
-            trans_value = trans_value.replace('\f',' ')
+        for (trans_value, parse_value)in zip(translated_text,parsed_text):
+            parse_value = parse_value['text'].replace('\f',' ')
+            trans_value = trans_value['text'].replace('\f',' ')
 
+            doc.add_paragraph("Origin / Translated Text", style='List Number')
             doc.add_paragraph(parse_value, style='Normal')
             doc.add_paragraph(trans_value, style='Normal')
         
         doc.save('./download/output.docx')
         return jsonify(success=True)
-    except:
-        return jsonify(success=False)
+    except Exception as e:
+        print(e)
+        return jsonify(success=False, error = e)
 
 @app.route('/test')
 def test() :
