@@ -64,8 +64,11 @@ $(document).ready(function() {
                 if (response.success) {
                     // If deletion was successful, remove all items from the list on the client side
                     allIndices.forEach(index => {
+                        console.log(index)
                         $('.result[data-index="'+index+'"]').remove();
                     });
+
+                    alert("Success Delete");
                 } else {
                     // Handle error if the items cannot be deleted
                     alert('Failed to delete all items.');

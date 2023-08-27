@@ -12,16 +12,22 @@ class googleTranslator :
     def translate(self) :
         print("start translate")
         translator = Translator()
-        translated_text = []
+        translated_list = []
 
-        for paragraph in self.origin_text.values():
+        for paragraph in self.origin_text:
             try : 
-                translated_text.append(translator.translate(paragraph,dest = self.dest_language, src='en').text)
+                translated_text = translator.translate(paragraph['text'],dest = self.dest_language, src='en').text
+                data = {
+                    "page_index" : paragraph['page_index'],
+                    "element_index" : paragraph['element_index'],
+                    "text" : translated_text,
+                    "position" : paragraph['position']
+                }
+                translated_list.append(data)
             except Exception as e :
                 print(f"Error occurred during translation: {e}")
 
-        translated_data = {index: item for index, item in enumerate(translated_text)}
-        fileManager.storeTheFile(os.path.join(self.data_path, 'translated_text.json'),translated_data)
+        fileManager.storeTheFile(os.path.join(self.data_path, 'translated_text.json'),translated_list)
 
     def translate_merged(self) :
         print("start translate the text which is merged")

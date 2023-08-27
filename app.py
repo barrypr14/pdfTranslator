@@ -31,13 +31,17 @@ def upload():
             os.mkdir('./data')
 
         # Create a module to parse the PDF file
+        # parser = PdfParser(file)
+        # parser.parse()
+
         parser = PdfParser(file)
-        parser.parse()
+        parser.parseWithOutBound()
 
         # Crate a module to translate the text
         trans = googleTranslator('zh-tw')
         trans.translate()
 
+        # return redirect(url_for('test'))
         return redirect(url_for('result'))
    
 @app.route('/result')
@@ -50,19 +54,16 @@ def result():
 def delete() :
     print("Let start removing the useless text")
     indices = request.form.getlist('indices[]')
-    indices = [int(index) for index in indices]
-
+    indices = [tuple(int(num) for num in index.replace('(','').replace(')','').split(',') )for index in indices]
+    
     # Get the origin data 
     translated_text = fileManager.readTheFile(os.path.join(data_path, 'translated_text.json'))
     parsed_text = fileManager.readTheFile(os.path.join(data_path, 'parsed_text.json'))
     
     # Start to remove the index that is useless for user
     try:
-        for index in indices :
-            if 0 <= index < int(max(translated_text.keys())):
-                translated_text.pop(str(index))
-                parsed_text.pop(str(index))
-
+        parsed_text = [obj for obj in parsed_text if (obj['page_index'],obj['element_index']) not in indices]
+        translated_text = [obj for obj in translated_text if  (obj['page_index'],obj['element_index']) not in indices]
         # Save the modified lists back to JSON files
         fileManager.storeTheFile(os.path.join(data_path, 'translated_text.json'),translated_text)
         fileManager.storeTheFile(os.path.join(data_path, 'parsed_text.json'),parsed_text)
@@ -123,6 +124,11 @@ def download():
         return jsonify(success=True)
     except:
         return jsonify(success=False)
+
+@app.route('/test')
+def test() :
+    data = fileManager.readTheFile(os.path.join(data_path, 'parsed_text.json'))
+    return render_template('test.html',text=data)
 
 if __name__ == '__main__':
     app.run(host='localhost',port=4000,debug=True)

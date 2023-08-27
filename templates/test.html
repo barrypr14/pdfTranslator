@@ -1,0 +1,53 @@
+<html>
+    <head>
+        <title>Parsed Text Result</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-wEmeIV1mKuiNpC+IOBjI7aAzPcEZeedi5yW5f2yOq55WWLwNGmvvx4Um1vskeMj0" crossorigin="anonymous">
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="../static/result.js"></script>
+    </head>
+    <body>
+        <div class="container">
+            <div class="container d-flex flex-column align-items-start position-fixed" style="left: 0;">
+                <div class="mb-2">
+                    <button class="btn btn-danger delete-selected-btn">Delete Selected</button>
+                    <button class="btn btn-danger delete-all-btn" style="display: none;">Delete All</button>                
+                </div>
+    
+                <div class="mb-2">
+                    <button class="btn btn-info merged-selected-btn">Merge Selected</button>
+                    <button class="btn btn-info translate-again-btn" style="display: none;">Translate Again</button>                
+                </div>
+    
+                <div class="mb-2">
+                    <button class="btn btn-success download-btn">Download</button>
+                </div>
+                <div>
+                    <button class="btn btn-primary delete-cancelled-btn mb-auto" style="display: none;">Cancel</button>
+                    <button class="btn btn-primary merged-cancelled-btn mb-auto" style="display: none;">Cancel</button>                
+                </div>
+            </div>
+            <div>
+                {% for data in text %}
+                <div class="container">
+                    <div>
+                        <p class="fw-bold">Origin Text :</p>
+                        <textarea rows="5" class="origin_text" data-index="{{data.element_index}}" style="width: 100%;">{{data.text}} </textarea>
+                        <p class="fw-bold">Translated Text : </p>
+                        <p class="translated_text" data-index="{{data.element_index}}">translated_text</p>                     
+                    </div>
+                    <div>
+                        <button class="btn btn-primary delete-btn" data-index="{{ data.element_index }}">delete</button>
+                    </div>
+                    <div>
+                        <input type="checkbox" class="item-checkbox" data-index="{{data.element_index}}" style="display: none;">
+                    </div>
+                    <div>
+                        <input type="checkbox" class="merged-checkbox" data-index="{{data.element_index}}" style="display: none;">
+                    </div>
+                </div>
+                {%endfor%}
+            </div>            
+        </div>
+
+    </body>
+</html>
