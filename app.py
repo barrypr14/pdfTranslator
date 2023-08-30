@@ -3,7 +3,8 @@ from flask import Flask, request, redirect, url_for, render_template, jsonify
 
 from PDFparser import PdfParser
 from Translator import googleTranslator
-from fileManager import fileManager
+from fileManager import *
+import config
 from docx import Document
 
 app = Flask(__name__)
@@ -27,18 +28,13 @@ def upload():
         return 'No selected file'
     
     if file:
-        if os.path.isdir(data_path) == False :
-            os.mkdir('./data')
+        checkDirExist(config.data_path)
 
         # Create a module to parse the PDF file
-        # parser = PdfParser(file)
-        # parser.parse()
-
         parser = PdfParser(file)
         parser.parseWithOutBound()
 
         # Crate a module to translate the text
-
         trans = googleTranslator()
         trans.translate('zh-tw')
 
@@ -115,8 +111,10 @@ def translate():
 
 @app.route('/download', methods=['GET'])
 def download():
-    translated_text = fileManager.readTheFile(os.path.join(data_path, 'translated_text.json'))
-    parsed_text = fileManager.readTheFile(os.path.join(data_path, 'parsed_text.json'))
+    transTextManager = fileManager(os.path.join(data_path, 'translated_text.json'))
+    parsedTextManager = fileManager(os.path.join(data_path, 'parsed_text.json'))
+    translated_text = transTextManager.readTheFile()
+    parsed_text = parsedTextManager.readTheFile()
 
     try:
         doc = Document()
@@ -129,6 +127,8 @@ def download():
             doc.add_paragraph(parse_value, style='Normal')
             doc.add_paragraph(trans_value, style='Normal')
         
+
+        checkDirExist(config.download_path)
         doc.save('./download/output.docx')
         return jsonify(success=True)
     except Exception as e:

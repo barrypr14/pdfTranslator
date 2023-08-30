@@ -155,8 +155,8 @@ $(document).ready(function() {
                     alert('Failed to translate the new text');
                 }
             },
-            error: function(){
-                console.log(e);
+            error: function(response){
+                console.log(response.error);
                 alert('Failed to translate the new text');
             }
         });

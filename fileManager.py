@@ -44,3 +44,7 @@ class pdfFileManager() :
     
     def getPdfPath(self) -> str:
         return  os.path.join(self.upload_path,self.file.filename)
+    
+def checkDirExist(path) :
+    if os.path.isdir(path) == False :
+        os.mkdir(path)
