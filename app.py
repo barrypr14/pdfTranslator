@@ -3,7 +3,7 @@ from flask import Flask, request, redirect, url_for, render_template, jsonify
 
 from PDFparser import PdfParser
 from Translator import googleTranslator
-import fileManager
+from fileManager import fileManager
 from docx import Document
 
 app = Flask(__name__)
@@ -38,17 +38,21 @@ def upload():
         parser.parseWithOutBound()
 
         # Crate a module to translate the text
-        trans = googleTranslator('zh-tw')
-        trans.translate()
+
+        trans = googleTranslator()
+        trans.translate('zh-tw')
 
         # return redirect(url_for('test'))
         return redirect(url_for('result'))
    
 @app.route('/result')
 def result():
-    json_data_translated = fileManager.readTheFile(os.path.join(data_path, 'translated_text.json'))
-    json_data_parsed = fileManager.readTheFile(os.path.join(data_path, 'parsed_text.json'))
-    return render_template('result.html',text=json_data_translated, origin=json_data_parsed)
+    transManager = fileManager(os.path.join(data_path, 'translated_text.json'))
+    parsedManager = fileManager(os.path.join(data_path, 'parsed_text.json'))
+
+    translated_data = transManager.readTheFile()
+    parsed_data = parsedManager.readTheFile()
+    return render_template('result.html',text=translated_data, origin=parsed_data)
 
 @app.route('/delete', methods=['POST'])
 def delete() :
@@ -56,21 +60,17 @@ def delete() :
     indices = request.form.getlist('indices[]')
     indices = [tuple(int(num) for num in index.split('-') )for index in indices]
     
-    # Get the origin data 
-    translated_text = fileManager.readTheFile(os.path.join(data_path, 'translated_text.json'))
-    parsed_text = fileManager.readTheFile(os.path.join(data_path, 'parsed_text.json'))
-    
+    translated_text = fileManager(os.path.join(data_path, 'translated_text.json')) 
+    parsed_text = fileManager(os.path.join(data_path, 'parsed_text.json'))
+
     # Start to remove the index that is useless for user
     try:
-        parsed_text = [obj for obj in parsed_text if (obj['page_index'],obj['element_index']) not in indices]
-        translated_text = [obj for obj in translated_text if  (obj['page_index'],obj['element_index']) not in indices]
-        # Save the modified lists back to JSON files
-        fileManager.storeTheFile(os.path.join(data_path, 'translated_text.json'),translated_text)
-        fileManager.storeTheFile(os.path.join(data_path, 'parsed_text.json'),parsed_text)
+        translated_text.deleteData(indices)
+        parsed_text.deleteData(indices)
 
         return jsonify(success=True)
-    except:
-        return jsonify(success=False, error='Invalid index')
+    except Exception as e:
+        return jsonify(success=False, error=e)
 
 @app.route('/translate', methods=['POST'])
 def translate():
@@ -81,19 +81,15 @@ def translate():
 
     indices = sorted(indices, key=lambda x : (x[0],x[1]))
     # Get the origin data 
-    translated_text = fileManager.readTheFile(os.path.join(data_path, 'translated_text.json'))
-    parsed_text = fileManager.readTheFile(os.path.join(data_path, 'parsed_text.json'))
+    transTextManager = fileManager(os.path.join(data_path, 'translated_text.json'))
+    parsedTextManager = fileManager(os.path.join(data_path, 'parsed_text.json'))
 
     # Start to delete the content in the origin dictionary and put the new translated text in the corresponding index
     try :
-        translator = googleTranslator('zh-tw',text=text)
-        translated_merged_text = translator.translate_merged()
+        translator = googleTranslator(text=text)
+        translated_merged_text = translator.translate_merged('zh-tw')
         
-        # get the first element position
-        for element in translated_text :
-            if element['page_index'] == indices[0][0] and element['element_index'] == indices[0][1] :
-                position = element['position']
-        
+        position = transTextManager.getFirstRangeData(indices)
         translated_data = {
             "page_index" : indices[0][0],
             "element_index" : indices[0][1],
@@ -106,25 +102,16 @@ def translate():
             "text" : text,
             "position" : position
         }
-    
-        # delete the origin selected data
-        parsed_text = [obj for obj in parsed_text if (obj['page_index'],obj['element_index']) not in indices]
-        translated_text = [obj for obj in translated_text if  (obj['page_index'],obj['element_index']) not in indices]
-        # put the new data in the file
-        translated_text.append(translated_data)
-        parsed_text.append(parsed_data)
 
-        # sort the file again to the correct order
-        translated_text = sorted(translated_text, key=lambda x: (x['page_index'], x['position'][0], -x['position'][3]))
-        parsed_text = sorted(parsed_text, key=lambda x: (x['page_index'], x['position'][0], -x['position'][3]))
+        transTextManager.deleteData(indices)
+        parsedTextManager.deleteData(indices)
 
-        # Save the modified lists back to JSON files
-        fileManager.storeTheFile(os.path.join(data_path, 'translated_text.json'),translated_text)
-        fileManager.storeTheFile(os.path.join(data_path, 'parsed_text.json'),parsed_text)        
+        transTextManager.addData(translated_data)
+        parsedTextManager.addData(parsed_data)
 
         return jsonify(success=True, text=translated_merged_text, indices = indices)
-    except :
-        return jsonify(success=False, error='Invalid merged')
+    except Exception as e :
+        return jsonify(success=False, error=e)
 
 @app.route('/download', methods=['GET'])
 def download():

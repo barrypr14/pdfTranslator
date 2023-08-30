@@ -74,9 +74,10 @@ $(document).ready(function() {
                     alert('Failed to delete all items.');
                 }
             },
-            error: function() {
+            error: function(response) {
                 // Handle error if the Ajax request fails
                 alert('Failed to delete all items.');
+                console.log(response.error);
             }
         }); 
         
@@ -155,6 +156,7 @@ $(document).ready(function() {
                 }
             },
             error: function(){
+                console.log(e);
                 alert('Failed to translate the new text');
             }
         });

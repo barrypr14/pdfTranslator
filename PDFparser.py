@@ -1,57 +1,19 @@
-from io import StringIO
 import os, json, re
-from operator import attrgetter
 
 from pdfminer.high_level import extract_pages
-# from pdfminer.converter import TextConverter
 from pdfminer.layout import LAParams, LTTextBox
-# from pdfminer.pdfdocument import PDFDocument
-# from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
-# from pdfminer.pdfpage import PDFPage
-# from pdfminer.pdfparser import PDFParser
 
-import fileManager
+from fileManager import fileManager, pdfFileManager
+import config
+
 class PdfParser :
     def __init__(self, file) :
         self.file = file
-        self.data_path = './data/'
-        self.upload_path = './upload/' 
-        self.pdf_path = self.upload_path + self.file.filename
+        self.pdfManager = pdfFileManager(file)
         self.prepare()
 
-    # def parse(self) :
-    #     output_string = StringIO()
-
-    #     with open(self.pdf_path, 'rb') as in_file:
-    #         parser = PDFParser(in_file)
-    #         doc = PDFDocument(parser)
-    #         rsrcmgr = PDFResourceManager()
-    #         device = TextConverter(rsrcmgr, output_string, laparams=LAParams(char_margin=10))
-    #         interpreter = PDFPageInterpreter(rsrcmgr, device)
-    #         for page in PDFPage.create_pages(doc):
-    #             interpreter.process_page(page)
-    #         device.close()
-
-    #     fileManager.storeTheFile(os.path.join(self.data_path, 'parsed_text_before.json'),output_string.getvalue())
-    #     # split into paragraph
-    #     split_to_paragraph = output_string.getvalue().split("\n\n")
-
-    #     # remove new line character
-    #     remove_newline = []
-    #     for paragraph in split_to_paragraph :
-    #         remove_newline.append(paragraph.replace("\n"," "))
-
-    #     parsed_data = {index: item for index,item in enumerate(remove_newline)} 
-    #     print("the type of parsed data in parser module => ",type(parsed_data))
-    #     fileManager.storeTheFile(os.path.join(self.data_path, 'parsed_text.json'),parsed_data)
-    #     print("finish parse function")
-
     def prepare(self) :
-        if os.path.isdir(self.upload_path) == False:
-            os.mkdir('./upload')
-
-        self.file.save(os.path.join(self.upload_path,self.file.filename))
-        print("finish prepare function")
+        self.pdfManager.prepare()
             
     def openParsed(self) :
         with open(os.path.join(self.data_path, 'parsed_text.json'), 'r', encoding='utf-8') as file:
@@ -60,7 +22,8 @@ class PdfParser :
     def parseWithOutBound(self) :
         main_content = []
         
-        for page_index, page_layout in enumerate(extract_pages(self.pdf_path, laparams= LAParams(char_margin=10))) :
+        pdfPath = self.pdfManager.getPdfPath()
+        for page_index, page_layout in enumerate(extract_pages(pdfPath, laparams= LAParams(char_margin=10))) :
             page_height = page_layout.height
             header_threshold = 0.95 * page_height
             footer_threshold = 0.05 * page_height
@@ -92,7 +55,8 @@ class PdfParser :
                     main_content.append(data)
                     
         sorted_data = sorted(main_content, key=lambda x: (x['page_index'], x['position'][0], -x['position'][3]))
-        fileManager.storeTheFile(os.path.join(self.data_path, 'parsed_text.json'),sorted_data)
+        jsonFileManager = fileManager(os.path.join(config.data_path, 'parsed_text.json'))
+        jsonFileManager.storeTheFile(sorted_data)
 
 def filter_figure_captions(text) :
     if not re.match(r'^(Fig|Table)\.?\s*\d+', text, re.IGNORECASE) :
