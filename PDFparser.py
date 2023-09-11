@@ -21,13 +21,13 @@ class PdfParser :
 
     def parseWithOutBound(self) :
         main_content = []
-        
+
         pdfPath = self.pdfManager.getPdfPath()
         for page_index, page_layout in enumerate(extract_pages(pdfPath, laparams= LAParams(char_margin=10))) :
             page_height = page_layout.height
             header_threshold = 0.95 * page_height
             footer_threshold = 0.05 * page_height
-            
+  
             for index, element in enumerate(page_layout) :
                 if isinstance(element, LTTextBox) :
                     x0, y0, x1, y1 = element.bbox

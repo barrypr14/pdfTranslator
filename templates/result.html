@@ -32,21 +32,15 @@
 
         <div class="container result-list">
             {% for translated_text, origin_text in text|zip(origin)%}
-            <div class="container m-2 border border-dark rounded d-flex result" data-index='{{origin_text.page_index}}-{{+origin_text.element_index}}'>
+            <div class="container m-2 border border-dark rounded d-flex result" data-index='{{origin_text.page_index}}-{{origin_text.element_index}}'>
                 <div class="container">
                     <p class="fw-bold">Origin Text :</p>
-                    <textarea rows="5" class="origin_text" data-index='{{origin_text.page_index}}-{{+origin_text.element_index}}' style="width: 100%;">{{origin_text.text}} </textarea>
+                    <textarea rows="5" class="origin_text" data-index='{{origin_text.page_index}}-{{origin_text.element_index}}' style="width: 100%;">{{origin_text.text}} </textarea>
                     <p class="fw-bold">Translated Text : </p>
-                    <p class="translated_text" data-index='{{origin_text.page_index}}-{{+origin_text.element_index}}'>{{translated_text.text}}</p>                     
+                    <p class="translated_text" data-index='{{origin_text.page_index}}-{{origin_text.element_index}}'>{{translated_text.text}}</p>                     
                 </div>
                 <div>
-                    <button class="btn btn-primary delete-btn" data-index='{{origin_text.page_index}}-{{+origin_text.element_index}}'>delete</button>
-                </div>
-                <div>
-                    <input type="checkbox" class="item-checkbox" data-index='{{origin_text.page_index}}-{{+origin_text.element_index}}' style="display: none;">
-                </div>
-                <div>
-                    <input type="checkbox" class="merged-checkbox" data-index='{{origin_text.page_index}}-{{+origin_text.element_index}}' style="display: none;">
+                    <button class="btn btn-primary delete-btn" data-index='{{origin_text.page_index}}-{{origin_text.element_index}}'>delete</button>
                 </div>
             </div>
             {% endfor %}
