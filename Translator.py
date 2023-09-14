@@ -32,6 +32,9 @@ class googleTranslator :
         jsonFileManager = fileManager(os.path.join(config.data_path, 'translated_text.json'))
         jsonFileManager.storeTheFile(translated_list)
 
+        backupManager = fileManager(os.path.join(config.data_path, 'backup_transText.json'))
+        backupManager.storeTheFile(translated_list)
+
     def translate_merged(self, dest_language) :
         translator = Translator()
 

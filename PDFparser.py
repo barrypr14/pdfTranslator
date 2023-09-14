@@ -58,6 +58,9 @@ class PdfParser :
         jsonFileManager = fileManager(os.path.join(config.data_path, 'parsed_text.json'))
         jsonFileManager.storeTheFile(sorted_data)
 
+        backupManager = fileManager(os.path.join(config.data_path,'backup_parsedText.json'))
+        backupManager.storeTheFile(sorted_data)
+
 def filter_figure_captions(text) :
     if not re.match(r'^(Fig|Table)\.?\s*\d+', text, re.IGNORECASE) :
         return False

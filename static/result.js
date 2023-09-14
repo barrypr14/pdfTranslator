@@ -214,4 +214,24 @@ $(document).ready(function() {
             console.log('select index : ',dataIndex);
         }
     })
+
+    // Undo Mode
+    $('.back-btn').click(async function() {
+        await $.ajax({
+            url: '/back',
+            type: 'GET',
+            success: function(response) {
+                if(response.success && response.undo !== 'nothing'){
+                    window.location.reload();
+                    alert("undo successfully");
+                }
+                else{
+                    alert("nothing undo");
+                }
+            },
+            error: function(response){
+                alert("Fail to use the undo mode");
+            }
+        })
+    })
 });
