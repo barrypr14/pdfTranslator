@@ -27,6 +27,13 @@ class googleTranslator :
 
                 print("Already processing {} / {}".format(i,totalLength))
             except Exception as e :
+                data = {
+                    "page_index" : paragraph['page_index'],
+                    "element_index" : paragraph['element_index'],
+                    "text" : "error translation",
+                    "position" : paragraph['position']
+                }
+                translated_list.append(data)
                 print(f"Error occurred during translation: {e}")
 
         jsonFileManager = fileManager(os.path.join(config.data_path, 'translated_text.json'))

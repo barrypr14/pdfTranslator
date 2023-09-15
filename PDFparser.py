@@ -62,6 +62,8 @@ class PdfParser :
         backupManager.storeTheFile(sorted_data)
 
 def filter_figure_captions(text) :
+    if re.match(r'http\S+', text, re.IGNORECASE) :
+        return True
     if not re.match(r'^(Fig|Table)\.?\s*\d+', text, re.IGNORECASE) :
         return False
     return True
